@@ -1,3 +1,4 @@
+import streamlit as st
 import pdfplumber
 import re
 import pandas as pd
@@ -25,7 +26,6 @@ def parse_bill_summary(text):
     # --- Account ---
     acc_pattern = r"Account\s+\$([\d\.]+)\s+-\s+\$([\d\.]+)\s+\$([\d\.]+)"
     acc_match = re.search(acc_pattern, text)
-    # print(acc_match)
     if acc_match:
         summary["account_plan"] = float(acc_match.group(1))
         summary["account_services"] = float(acc_match.group(2))
@@ -45,14 +45,12 @@ def parse_bill_summary(text):
 
     # --- Individual lines (handles “-” properly) ---
     line_pattern = re.compile(
-        #r"\((\d{3}\)\s*\d{3}-\d{4})\)\s+([A-Za-z]+)\s+\$([\d\.]+)\s+\$([\d\.]+|-)\s+\$([\d\.]+|-)\s+\$([\d\.]+)",
         r"(\(\d{3}\)\s*\d{3}-\d{4})\s+([A-Za-z]+)\s+\$([\d\.]+)\s+(\$[\d\.]+|-)\s+(\$[\d\.]+|-)\s+\$([\d\.]+)",
         re.IGNORECASE,
     )
     tax = 0.0
     lines = 0
     for m in line_pattern.finditer(text):
-        # print(m)
         phone, ltype, plan, equip, serv, total = m.groups()
         if ltype.strip() == "Voice":
             lines += 1
@@ -68,7 +66,6 @@ def parse_bill_summary(text):
     
     summary["tax_total"] = tax
     summary["total_lines"] = lines
-    # print(summary)
     return summary
 
 def compute_summary(data):
@@ -76,7 +73,6 @@ def compute_summary(data):
     shared_account = (data["account_plan"] + data["account_services"]) / num_lines
     shared_tax = data["tax_total"] / num_lines
 
-    # print(shared_account, shared_tax)
     final_rows = []
     for line in data["lines"]:
         if line["type"] == "Voice":
