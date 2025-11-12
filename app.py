@@ -39,7 +39,7 @@ if uploaded_file:
     data = parse_bill_summary(text)
     df = compute_summary(data)
     total = df["final_total"].sum()
-    bill_total = data["totals"]["grand"]
+    bill_total = data["totals"]["total"]
     
     st.success("✅ Bill summary generated successfully!")
     st.markdown(f"### 💰 Total Bill: **${bill_total:.2f}**")
@@ -80,7 +80,7 @@ if uploaded_file:
         st.markdown("---")
  
     st.markdown(f"### 💰 Grand Total: **${total:.2f}**")
-    if data["totals"]["grand"] != total:
+    if data["totals"]["total"] != total:
         st.warning("💰 Bill total do not match!")
 
     qr_buf = generate_qr(df)
