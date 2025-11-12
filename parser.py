@@ -66,7 +66,7 @@ def parse_bill_summary(text):
     # Handles variable columns and optional dashes
     money_field = r"(\$[\d\.]+|-)"
     line_pattern = re.compile(
-        r"(\(\d{3}\)\s*\d{3}-\d{4})\s+([A-Za-z]+)\s+" + r"\s+".join([money_field] * (col_count)) + r"\s+(\$[\d\.]+|-)\s+",
+        r"(\(\d{3}\)\s*\d{3}-\d{4})\s+([A-Za-z\s]+)\s+" + r"\s+".join([money_field] * (col_count)) + r"\s+(\$[\d\.]+|-)\s+",
         re.IGNORECASE
     )
     
