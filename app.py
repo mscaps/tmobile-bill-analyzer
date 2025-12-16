@@ -80,7 +80,7 @@ if uploaded_file:
         st.markdown("---")
  
     st.markdown(f"### 💰 Grand Total: **${total:.2f}**")
-    if data["totals"]["total"] != total:
+    if bill_total != round(total,2):
         st.warning("💰 Bill total do not match!")
 
     qr_buf = generate_qr(df)

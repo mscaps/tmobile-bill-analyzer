@@ -64,25 +64,37 @@ def parse_bill_summary(text):
     
     # --- Extract all phone lines ---
     # Handles variable columns and optional dashes
+    # Defining line types to ignore other text after the phone number
+    LINE_TYPES = ["Voice", "Wearable", "Mobile Internet", "Digits", "Tablet", "Other", "Watch"]
+    type_regex = "(" + "|".join(LINE_TYPES) + ")"
+
     money_field = r"(\$[\d\.]+|-)"
+    plan_field = r"\s?([-]?\$[\d\.]+)\s?"  # to consider negative values
+    # decreasing the column count as we explictly including the plan field and
+    # using the plan field regex for totals as it may contain negative values 
     line_pattern = re.compile(
-        r"(\(\d{3}\)\s*\d{3}-\d{4})\s+([A-Za-z\s]+)\s+" + r"\s+".join([money_field] * (col_count)) + r"\s+(\$[\d\.]+|-)\s+",
+        r"(\(\d{3}\)\s*\d{3}-\d{4})\s+(.*?)" + type_regex + plan_field + 
+        r"\s?".join([money_field] * (col_count-1)) + plan_field,
         re.IGNORECASE
     )
     
+    # identify lines to be ignored but include in calculation
+    IGNORE_KEYWORDS = ["old number","port out","replaced"]
     tax = 0.0
     voice_lines = 0
     lines = []
     for match in line_pattern.finditer(text):
-        phone, ltype, *values = match.groups()
-        values = [0.0 if v == "-" else float(v.replace("$", "")) for v in values]
-        entry = {"phone": phone, "type": ltype}
+        phone, etxt, ltype, *values = match.groups()
+        ignore = any(k in etxt.lower() for k in IGNORE_KEYWORDS)
+        entry = {"phone": phone, "type": ltype, "ignore": ignore}
         for h, v in zip(headers[1:], values):
+            v = 0.0 if v in ("-", "None", None, "") else float(v.replace("$", ""))
             entry[h.lower()] = v
         lines.append(entry)
 
         if ltype.strip() == "Voice":
-            voice_lines += 1
+            if not ignore:
+                voice_lines += 1
             tax += entry["plans"]
 
     # --- Parse totals ---
@@ -109,6 +121,9 @@ def compute_summary(parsed):
     
     final_rows = []
     for line in parsed["lines"]:
+        if line["ignore"]:
+            continue
+
         if line["type"] == "Voice":
             total = line["total"] - line["plans"] + account_share + tax_share
         else:
@@ -116,7 +131,7 @@ def compute_summary(parsed):
 
         individual_line = {}
         for k, v in line.items():
-            if k not in ["plans","services", "total"]:
+            if k not in ["plans","services", "total", "ignore"]:
                 individual_line[k] = v
         
         individual_line["cost"] = round(total, 2)
