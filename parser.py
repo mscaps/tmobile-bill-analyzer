@@ -68,13 +68,15 @@ def parse_bill_summary(text):
     LINE_TYPES = ["Voice", "Wearable", "Mobile Internet", "Digits", "Tablet", "Other", "Watch"]
     type_regex = "(" + "|".join(LINE_TYPES) + ")"
 
-    money_field = r"(\$[\d\.]+|-)"
+    money_field = r"\s?([-]?\$[\d\.]+|-)"
     plan_field = r"\s?([-]?\$[\d\.]+)\s?"  # to consider negative values
     # decreasing the column count as we explictly including the plan field and
     # using the plan field regex for totals as it may contain negative values 
     line_pattern = re.compile(
-        r"(\(\d{3}\)\s*\d{3}-\d{4})\s+(.*?)" + type_regex + plan_field + 
-        r"\s?".join([money_field] * (col_count-1)) + plan_field,
+        r"(\(\d{3}\)\s*\d{3}-\d{4})\s+(.*?)" + type_regex + #plan_field + 
+        # r"\s?".join([money_field] * (col_count-1)) - updating to consider -ve
+        r"\s?".join([money_field] * (col_count)) 
+        + plan_field,                               # totals column
         re.IGNORECASE
     )
     
