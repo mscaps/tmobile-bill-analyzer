@@ -94,7 +94,7 @@ def parse_bill_summary(text):
             entry[h.lower()] = v
         lines.append(entry)
 
-        if ltype.strip() == "Voice":
+        if ltype.strip() == "Voice" and entry["plans"] > 0:
             if not ignore:
                 voice_lines += 1
             tax += entry["plans"]
@@ -126,7 +126,7 @@ def compute_summary(parsed):
         if line["ignore"]:
             continue
 
-        if line["type"] == "Voice":
+        if line["type"] == "Voice" and line["plans"] > 0:
             total = line["total"] - line["plans"] + account_share + tax_share
         else:
             total = line["total"]
